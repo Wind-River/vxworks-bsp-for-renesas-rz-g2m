@@ -1,0 +1,353 @@
+/* r8a774a1-hihope-rzg2m.dts - Renesas RZ/G2M board device tree source */
+
+/*
+modification history
+--------------------
+17sep19,hli  created (VXWPG-394)
+*/
+
+/dts-v1/;
+
+#include "prjParams.h"
+#include "r8a774a1.dtsi"
+
+/   {
+    model = "HopeRun HiHope RZ/G2M main board based on r8a774a1";
+    compatible = "hoperun,hihope-rzg2m";
+
+    #address-cells = <2>;
+    #size-cells = <2>;
+    interrupt-parent = <&gic>;
+
+    memory@0
+        {
+        device_type = "memory";
+
+        /* first 128MB is reserved for secure area */
+
+        reg = <0x0 0x48000000 0x0 0x78000000>,
+              <0x6 0x00000000 0x0 0x80000000>;
+
+        };
+
+    /* ethernet<n> alias required for U-Boot bootm MAC address update */
+
+    aliases
+        {
+        serial0 = &scif2;
+        ethernet0 = &avb;
+        };
+
+    chosen
+        {
+        /* U-Boot bootm command will update bootargs in standalone DTB */
+
+        bootargs = DEFAULT_BOOT_LINE;
+        };
+    };
+
+&scif_clk
+    {
+    clock-frequency = <14745600>;
+    };
+
+&extal_clk
+    {
+    clock-frequency = <16666666>;
+    };
+
+&extalr_clk
+    {
+    clock-frequency = <32768>;
+    };
+
+&pcie_bus_clk
+    {
+    clock-frequency = <100000000>;
+    };
+    
+&scif2
+    {
+    pinmux-0 = <&scif2Pins>;
+    status = "okay";
+    };
+
+&avb
+    {
+    /* U-Boot bootm command will update local-mac-address in standalone DTB */
+    local-mac-address = [ 2E 09 0A 00 00 00 ];
+
+    pinmux-0 = <&avb_pins>;
+    phy-handle = <&phy0>;
+    phy-mode = "rgmii-id";
+    status = "okay";
+    
+    phy0: ethernet-phy@0
+       {
+        compatible = "rtlPhy";
+        reg = <0>;
+       };
+    };
+
+&pfc
+    {
+    scif2Pins: scif2
+        {
+        /* TX2_A, RX2_A */
+        pins = "sipF38", "sipF39";
+        function = "scif2";
+        bias-disable;
+        drive-control = <8>;
+        };
+
+    avb_pins: avb
+        {
+        mux
+            {
+            /* AVB_MDC, AVB_PHY_INT, AVB_LINK */
+            pins = "sipA15", "sipB16", "sipB9";
+            function = "etheravb";
+            bias-disable;
+            };
+
+        conf
+            {
+            /*
+             * AVB_MDIO, AVB_TXCREF_CLK, AVB_TD3, AVB_TD2, AVB_TD1, AVB_TD0,
+             * AVB_TXC, AVB_TX_CTL, AVB_RD3, AVB_RD2, AVB_RD1, AVB_RD0,
+             * AVB_RXC, AVB_RX_CTL
+             */
+            pins = "sipA9", "sipA12", "sipB17", "sipA17", "sipB18", "sipA18",
+                   "sipA19", "sipA8", "sipB14", "sipA14", "sipB13", "sipA13",
+                   "sipB19", "sipA16";
+            bias-disable;
+            };
+
+        drv_half
+            {
+            /* AVB_TD3, AVB_TD2, AVB_TD1, AVB_TD0, AVB_TXC, AVB_TX_CTL */
+            pins = "sipB17", "sipA17", "sipB18", "sipA18", "sipA19", "sipA8";
+            drive-control = <4>;
+            };
+
+        drv_full
+            {
+            /* AVB_MDC, AVB_MDIO */
+            pins = "sipA15", "sipA9";
+            drive-control = <8>;
+            };
+        };
+
+    i2c0Pins: i2c0
+        {
+        pins = "sipC29", "sipB29";
+        function = "i2c0";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c1APins: i2c1A
+        {
+        pins = "sipAB34", "sipAB33";
+        function = "i2c1";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c1BPins: i2c1B
+        {
+        pins = "sipAA39", "sipJ39";
+        function = "i2c1";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c2APins: i2c2A
+        {
+        pins = "sipG39", "sipK39";
+        function = "i2c2";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c2BPins: i2c2B
+        {
+        pins = "sipV31", "sipV30";
+        function = "i2c2";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c3Pins: i2c3
+        {
+        pins = "sipB6", "sipA6";
+        function = "i2c3";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c5Pins: i2c5
+        {
+        pins = "sipB11", "sipA11";
+        function = "i2c5";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c6APins: i2c6A
+        {
+        pins = "sipJ1", "sipK2";
+        function = "i2c6";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c6BPins: i2c6B
+        {
+        pins = "sipB1", "sipD2";
+        function = "i2c6";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    i2c6CPins: i2c6C
+        {
+        pins = "sipR2", "sipR1";
+        function = "i2c6";
+        bias-disable;
+        drive-control = <1>;
+        };
+
+    sdhi0Pins: sd0
+        {
+        sdhi0
+            {
+            pins = "sipT35", "sipU33",  /* CLK and CMD */
+                   "sipT33", "sipT32",  /* DATA0 and DATA1 */
+                   "sipU35", "sipU34";  /* DATA2 and DATA3 */
+            function = "sdhi0";
+            };
+
+        gpioCd
+            {
+            pins = "sipV31";        /* GP3-12 */
+            bias-disable;
+            gpio-enable;
+            drive-control = <8>;
+            };
+        };
+
+    mmc0Pins: mmc0
+        {
+        pins = "sipA26", "sipA25",  /* CLK and CMD */
+               "sipD26", "sipC25",  /* DATA0 and DATA1 */
+               "sipD24", "sipD23",  /* DATA2 and DATA3 */
+               "sipA27", "sipB27",  /* DATA4 and DATA5 */
+               "sipC27", "sipD27",  /* DATA6 and DATA7 */
+               "sipB25";            /* DS */
+        function = "mmc0";
+        };
+
+    mmc1Pins: mmc1
+        {
+        pins = "sipM35", "sipM31",  /* CLK and CMD */
+               "sipL33", "sipM30",  /* DATA0 and DATA1 */
+               "sipM32", "sipL34",  /* DATA2 and DATA3 */
+               "sipM33", "sipN33",  /* DATA4 and DATA5 */
+               "sipN32", "sipN31",  /* DATA6 and DATA7 */
+               "sipN30";            /* DS */
+        function = "mmc1";
+        };
+
+    usb0Pins: usb0
+        {
+        pins = "sipAH31", "sipAH32"; /* USB0_PWEN and USB0_OVC for usb2.0 */
+        function = "usb0";
+        };
+
+    usb1Pins: usb1
+        {
+        pins = "sipAH34", "sipAH33"; /* USB1_PWEN and USB1_OVC for usb2.0 */
+        function = "usb1";
+        };
+
+    usb30Pins: usb30
+        {
+        pins = "sipAJ33", "sipAH30"; /* USB30_PWEN and USB30_OVC for usb3.0 */
+        function = "usb3";
+        };
+    };
+
+&gpio6
+    {
+    status = "okay";
+    };
+
+&wdt0
+    {
+    status = "okay";
+    };
+
+&i2c0
+    {
+    pinmux-0 = <&i2c0Pins>;
+    status = "okay";
+    };
+
+&i2c4
+    {
+    status = "okay";
+    };
+
+&pciec0
+    {
+    status = "okay";
+    };
+
+&pciec1
+    {
+    status = "okay";
+    };
+
+&sdhi0
+    {
+    pinmux-0 = <&sdhi0Pins>;
+    cd-pin   = <0xfffe>;    /* always exist */
+    wp-pin   = <0xffff>;    /* always writeable */
+    driver-type = <1>;
+    bus-width = <4>;
+    status = "okay";
+    };
+
+&mmc1
+    {
+    pinmux-0 = <&mmc1Pins>;
+    cd-pin   = <0xfffe>;    /* always exist */
+    wp-pin   = <0xffff>;    /* always writeable */
+    voltage-support = "1V8";
+    driver-type = <1>;
+    bus-width = <8>;
+    status = "okay";
+    };
+
+&usb2_phy1
+    {
+    pinmux-0 = <&usb1Pins>;
+    status = "okay";
+    };
+
+&ehci1
+    {
+    status = "okay";
+    };
+
+&ohci1
+    {
+    status = "okay";
+    };
+
+&xhci0
+    {
+    pinmux-0 = <&usb30Pins>;
+    status = "okay";
+    };

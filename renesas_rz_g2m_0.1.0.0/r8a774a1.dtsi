@@ -1,0 +1,834 @@
+/* r8a774a1.dtsi - Renesas RZ/G2 device tree source include file */
+
+/*
+modification history
+--------------------
+17sep19,hli  created (VXWPG-394)
+*/
+
+/*
+This is the Device Tree Source include file for the Renesas r8a774a1 SoC. It
+should be included by a DTS as required.
+
+Nodes for devices that may not be supported by external hardware have their
+<status> property value set to "disabled". VxBus does not attempt to attach
+drivers for disabled devices. The DTS defining the external hardware should set
+the status property value to "okay" if it is supported.
+
+For example, if SCIF2 is supported, add the following to the DTS:
+
+    &scif2
+        {
+        status = "okay";
+        };
+
+Nodes for devices that have pins configured by the Pin Function Controller (PFC)
+have their <pinmux-0> property, the default pin mux configuration state, defined
+as an empty list indicating no additional pin configuration is required. The DTS
+defining the external hardware should set the pinmux property value to reference
+a suitable pin mux configuration node if required.
+
+*/
+
+/   {
+    cpus
+        {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        cpu@0
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a57", "arm,armv8";
+            reg = <0>;
+            };
+
+        cpu@1
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a57", "arm,armv8";
+            reg = <1>;
+            };
+
+        cpu@100
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53", "arm,armv8";
+            reg = <0x100>;
+            };
+
+        cpu@101
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53", "arm,armv8";
+            reg = <0x101>;
+            };
+
+        cpu@102
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53", "arm,armv8";
+            reg = <0x102>;
+            };
+
+        cpu@103
+            {
+            device_type = "cpu";
+            compatible = "arm,cortex-a53", "arm,armv8";
+            reg = <0x103>;
+            };
+    };
+
+    /* External SCIF clock - to be overridden by boards that provide it */
+
+    scif_clk: scif
+        {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <0>;
+        };
+
+    /* External EXTAL clock - to be overridden by boards that provide it */
+
+    extal_clk: extal
+        {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <0>;
+        };
+
+    /* External EXTALR clock - to be overridden by boards that provide it */
+
+    extalr_clk: extalr
+        {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <0>;
+        };
+
+    /* External PCIe clock - to be overridden by boards that provide it */
+
+    pcie_bus_clk: pcie_bus
+        {
+        compatible = "fixed-clock";
+        #clock-cells = <0>;
+        clock-frequency = <0>;
+        };
+
+    soc
+        {
+        compatible = "simple-bus";
+        #address-cells = <2>;
+        #size-cells = <2>;
+
+        cpg: clock-controller@e6150000
+            {
+            compatible = "renesas,r8a774a1-cpg-mssr";
+            reg = <0x00000000 0xe6150000 0x0 0x1000>;
+            clocks = <&extal_clk>, <&extalr_clk>;
+            clock-names = "extal", "extalr";
+            #clock-cells = <1>;
+            status = "okay";
+            };
+
+        prr: product-register@fff00000
+            {
+            compatible = "renesas,r8a774a1-prr";
+            reg = <0x00000000 0xfff00000 0x0 0x1000>;
+            status = "okay";
+            };
+
+        rst: reset-controller@e6160000
+            {
+            compatible = "renesas,r8a774a1-rst";
+            reg = <0x00000000 0xe6160000 0x0 0x1000>;
+            status = "okay";
+            };
+
+        sysc: system-controller@e6180000
+            {
+            compatible = "renesas,r8a774a1-sysc";
+            reg = <0x00000000 0xe6180000 0x0 0x400>;
+            #power-domain-cells = <1>;
+            };
+
+        pfc: pin-controller@e6060000
+            {
+            compatible = "renesas,pfc-r8a774a1";
+            reg = <0x00000000 0xe6060000 0x0 0x50c>;
+            pinmux-0;
+            status = "okay";
+            };
+
+        gic: interrupt-controller@f1010000
+            {
+            compatible = "arm,gic";
+            interrupt-controller;
+            #interrupt-cells = <3>;
+            max-int-lvl = <512>;
+            reg = <0x0 0xf1010000 0x0 0x1000>,   /* GICD */
+                  <0x0 0xF1020000 0x0 0x20000>,  /* GICC */
+                  <0x0 0xF1040000 0x0 0x20000>,  /* GICH */
+                  <0x0 0xF1060000 0x0 0x20000>;  /* GICV */
+            status = "okay";
+            };
+
+        tmu0: timer@e61e0000
+            {
+            compatible = "renesas,rcar-h3-tmu";
+            reg = <0x00000000 0xe61e0000 0x0 0x30>;
+            interrupts = <168 0 4>, /* ch0 */
+                         <169 0 4>, /* ch1 */
+                         <170 0 4>; /* ch2 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 59>,     /* CP input clock */
+                     <&cpg 67>;     /* TMU0 module clock */
+            clock-names = "inputClk", "moduleClk";
+            status = "okay";
+            };
+
+        tmu1: timer@e6fc0000
+            {
+            compatible = "renesas,rcar-h3-tmu";
+            reg = <0x00000000 0xe6fc0000 0x0 0x30>;
+            interrupts = <160 0 4>, /* ch3 */
+                         <161 0 4>, /* ch4 */
+                         <162 0 4>; /* ch5 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,     /* S3D2 input clock */
+                     <&cpg 68>;     /* TMU1 module clock */
+            clock-names = "inputClk", "moduleClk";
+            status = "okay";
+            };
+
+        tmu2: timer@e6fd0000
+            {
+            compatible = "renesas,rcar-h3-tmu";
+            reg = <0x00000000 0xe6fd0000 0x0 0x30>;
+            interrupts = <335 0 4>, /* ch6 */
+                         <336 0 4>, /* ch7 */
+                         <337 0 4>; /* ch8 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,     /* S3D2 input clock */
+                     <&cpg 69>;     /* TMU2 module clock */
+            clock-names = "inputClk", "moduleClk";
+            status = "okay";
+            };
+
+        tmu3: timer@e6fe0000
+            {
+            compatible = "renesas,tmu-r8a774a1",
+                         "renesas,rcar-h3-tmu";
+            reg = <0x00000000 0xe6fe0000 0x0 0x30>;
+            interrupts = <163 0 4>, /* ch9 */
+                         <164 0 4>, /* ch10 */
+                         <165 0 4>; /* ch11 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,     /* S3D2 input clock */
+                     <&cpg 70>;     /* TMU3 module clock */
+            clock-names = "inputClk", "moduleClk";
+            status = "okay";
+            };
+
+        tmu4: timer@ffc00000
+            {
+            compatible = "renesas,rcar-h3-tmu";
+            reg = <0x00000000 0xffc00000 0x0 0x30>;
+            interrupts = <438 0 4>, /* ch12 */
+                         <439 0 4>, /* ch13 */
+                         <440 0 4>; /* ch14 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 25>,     /* S3D2 input clock */
+                     <&cpg 67>;     /* TMU4 module clock */
+            clock-names = "inputClk", "moduleClk";
+            status = "okay";
+            };
+
+        generic-timer
+            {
+            compatible = "arm,arm-gen-timer";
+
+            /* should be trigger low but GIC driver does not support this yet */
+
+            interrupts = <29 1 4    /* secure physical timer PPI - low */
+                          30 1 4    /* non-secure physical timer PPI - low */
+                          27 1 4>;  /* virtual timer PPI - low  */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 58>;     /* CPEX generic counter clock */
+            status = "okay";
+            };
+
+        scif2: serial@e6e88000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6e88000 0x0 64>;
+            interrupts = <196 0 4>;     /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 34>,         /* S3D1 external BRG */
+                     <&cpg 36>;         /* S3D4 internal BRG */
+            clock-names = "scif_clk", "externalClk", "internalClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        scif0: serial@e6e60000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6e60000 0x0 64>;
+            interrupts = <184 0 4>;     /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 30>,         /* S3D1 external BRG */
+                     <&cpg 32>,         /* S3D4 internal BRG */
+                     <&cpg 89>;         /* SCIF0 module clock */
+            clock-names = "scif_clk", "externalClk", "internalClk", "moduleClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        scif1: serial@e6e68000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6e68000 0x0 64>;
+            interrupts = <185 0 4>;     /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 30>,         /* S3D1 external BRG */
+                     <&cpg 32>,         /* S3D4 internal BRG */
+                     <&cpg 89>;         /* SCIF1 module clock */
+            clock-names = "scif_clk", "externalClk", "internalClk", "moduleClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        scif3: serial@e6c50000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6c50000 0x0 64>;
+            interrupts = <55 0 4>;      /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 30>,         /* S3D1 external BRG */
+                     <&cpg 32>,         /* S3D4 internal BRG */
+                     <&cpg 94>;         /* SCIF3 module clock */
+            clock-names = "scif_clk", "externalClk", "internalClk", "moduleClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        scif4: serial@e6c40000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6c40000 0x0 64>;
+            interrupts = <48 0 4>;      /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 30>,         /* S3D1 external BRG */
+                     <&cpg 32>,         /* S3D4 internal BRG */
+                     <&cpg 95>;         /* SCIF4 module clock */
+            clock-names = "scif_clk", "externalClk", "internalClk", "moduleClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        scif5: serial@e6f30000
+            {
+            compatible = "renesas,rcar-h3-scif";
+            reg = <0x00000000 0xe6f30000 0x0 64>;
+            interrupts = <49 0 4>;      /* IRQ trigger high */
+            interrupt-parent = <&gic>;
+            clocks = <&scif_clk>,       /* SCIF_CLK external BRG */
+                     <&cpg 30>,         /* S3D1 external BRG */
+                     <&cpg 32>,         /* S3D4 internal BRG */
+                     <&cpg 96>;         /* SCIF5 module clock */
+            clock-names = "scif_clk", "externalClk", "internalClk", "moduleClk";
+            pinmux-0;
+            status = "disabled";
+            };
+
+        gpio0: gpio@e6050000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6050000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 209>;            /* GPIO0 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <36 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <16>;
+            status = "disabled";
+            };
+
+        gpio1: gpio@e6051000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6051000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 210>;            /* GPIO1 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <37 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <29>;
+            status = "disabled";
+            };
+
+        gpio2: gpio@e6052000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6052000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 211>;            /* GPIO2 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <38 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <15>;
+            status = "disabled";
+            };
+
+        gpio3: gpio@e6053000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6053000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 212>;            /* GPIO3 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <39 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <16>;
+            status = "disabled";
+            };
+
+        gpio4: gpio@e6054000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6054000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 213>;            /* GPIO4 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <40 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <18>;
+            status = "disabled";
+            };
+
+        gpio5: gpio@e6055000
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6055000 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 214>;            /* GPIO5 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <41 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <26>;
+            status = "disabled";
+            };
+
+        gpio6: gpio@e6055400
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6055400 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 215>;            /* GPIO6 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <42 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <32>;
+            status = "disabled";
+            };
+
+        gpio7: gpio@e6055800
+            {
+            compatible = "renesas,rcar-h3-gpio";
+            reg = <0x00000000 0xe6055800 0x0 0x50>;
+            gpio-controller;
+            clocks = <&cpg 59>,             /* CP input clock */
+                     <&cpg 216>;            /* GPIO7 module clock */
+            clock-names = "inputClk", "moduleClk";
+            #gpio-cells = <4>;
+            interrupts = <43 0 4>; /* ch0 */
+            interrupt-parent = <&gic>;
+            gpio-pinnum = <4>;
+            status = "disabled";
+            };
+
+        wdt0: watchdog@e6020000 {
+            compatible = "renesas,rcar-h3-wdt";
+            reg = <0x00000000 0xe6020000 0x0 0x0c>;
+            clocks = <&cpg 61>,             /* RCLK input clock  */
+                     <&cpg 117>;            /* RWDT module clock */
+            clock-names = "inputClk", "moduleClk";
+            timeout-sec = <60>;
+            status = "disabled";
+            };
+
+        pciec0: pcie@fe000000
+            {
+            compatible = "renesas,rcar-h3-pcie";
+            reg = <0x0 0xfe000000 0x0 0x80000>;
+            #address-cells = <3>;
+            #size-cells = <2>;
+            bus-range = <0x00 0xff>;
+            device_type = "pci";
+
+            ranges = <0x01000000 0 0x00000000 0 0xfe100000 0 0x00100000
+                      0x02000000 0 0xfe200000 0 0xfe200000 0 0x00200000
+                      0x02000000 0 0x30000000 0 0x30000000 0 0x08000000
+                      0x42000000 0 0x38000000 0 0x38000000 0 0x08000000>;
+
+            /* Map all DDR in non-secure world as inbound ranges */
+            dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
+
+            interrupts = <148 0 4>,
+                         <149 0 4>,
+                         <150 0 4>;
+            #interrupt-cells = <1>;
+            interrupt-map-mask = <0 0 0 7>;
+            interrupt-map = <0x0000 0 0 1 &pciec0 0      /* INT A */
+                             0x0000 0 0 2 &pciec0 1      /* INT B */
+                             0x0000 0 0 3 &pciec0 2      /* INT C */
+                             0x0000 0 0 4 &pciec0 3>;    /* INT D */
+            clocks = <&pcie_bus_clk>,       /* external bus clock */
+                     <&cpg 101>;            /* PCIE0 module clock */
+            clock-names = "pcieBusClk", "moduleClk";
+            status = "disabled";
+            };
+
+        pciec1: pcie@ee800000
+            {
+            compatible = "renesas,rcar-h3-pcie";
+            reg = <0x0 0xee800000 0x0 0x80000>;
+            #address-cells = <3>;
+            #size-cells = <2>;
+            bus-range = <0x00 0xff>;
+            device_type = "pci";
+
+            ranges = <0x01000000 0 0x00000000 0 0xee900000 0 0x00100000
+                      0x02000000 0 0xeea00000 0 0xeea00000 0 0x00200000
+                      0x02000000 0 0xc0000000 0 0xc0000000 0 0x08000000
+                      0x42000000 0 0xc8000000 0 0xc8000000 0 0x08000000>;
+
+            /* Map all DDR in non-secure world as inbound ranges */
+            dma-ranges = <0x42000000 0 0x40000000 0 0x40000000 0 0x80000000>;
+
+            interrupts = <180 0 4>,
+                         <181 0 4>,
+                         <182 0 4>;
+            #interrupt-cells = <1>;
+            interrupt-map-mask = <0 0 0 7>;
+            interrupt-map = <0x0000 0 0 1 &pciec1 0      /* INT A */
+                             0x0000 0 0 2 &pciec1 1      /* INT B */
+                             0x0000 0 0 3 &pciec1 2      /* INT C */
+                             0x0000 0 0 4 &pciec1 3>;    /* INT D */
+            clocks = <&pcie_bus_clk>,       /* external bus clock */
+                     <&cpg 102>;            /* PCIE0 module clock */
+            clock-names = "pcieBusClk", "moduleClk";
+            status = "disabled";
+            };
+
+        avb: ethernet@e6800000
+            {
+            compatible = "renesas,rcar-h3-etheravb";
+            reg = <0x0 0xe6800000 0x0 0x800>;
+            interrupts = <71 0 4>, <72 0 4>, <73 0 4>, <74 0 4>, <75 0 4>,
+                         <76 0 4>, <77 0 4>, <78 0 4>, <79 0 4>, <80 0 4>,
+                         <81 0 4>, <82 0 4>, <83 0 4>, <84 0 4>, <85 0 4>,
+                         <86 0 4>, <87 0 4>, <88 0 4>, <89 0 4>, <90 0 4>,
+                         <91 0 4>, <92 0 4>, <93 0 4>, <94 0 4>, <95 0 4>;
+
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 30>,         /* S3D1 for ZS AXI bus clk */
+                     <&cpg 31>,         /* S3D2 for HP High speed periph clk */
+                     <&cpg 183>;        /* EAVB-IF module clk */
+            clock-names = "zsClk", "hpClk", "moduleClk";
+            phy-mode = "rgmii";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            status = "disabled";
+            };
+
+        i2c0: i2c@e6500000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe6500000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <319 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,                 /* S3D2 is I2C input clock */
+                     <&cpg 193>;                /* I2C-IF0 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <110>;  /* Open drain buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c1: i2c@e6508000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe6508000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <320 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,                 /* S3D2 is I2C input clock */
+                     <&cpg 194>;                /* I2C-IF1 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <6>;    /* LVTTL buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c2: i2c@e6510000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe6510000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <318 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 35>,                 /* S3D2 is I2C input clock */
+                     <&cpg 195>;                /* I2C-IF2 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <6>;    /* LVTTL buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c3: i2c@e66d0000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe66d0000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <322 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 25>,                 /* S0D6 is I2C input clock */
+                     <&cpg 196>;                /* I2C-IF3 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <110>;  /* Open drain buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c4: i2c@e66d8000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe66d8000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <51 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 25>,                 /* S0D6 is I2C input clock */
+                     <&cpg 197>;                /* I2C-IF4 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <110>;  /* Open drain buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c5: i2c@e66e0000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe66e0000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <52 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 25>,                 /* S0D6 is I2C input clock */
+                     <&cpg 203>;                /* I2C-IF5 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <110>;  /* Open drain buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        i2c6: i2c@e66e8000
+            {
+            compatible = "renesas,rcar-h3-i2c";
+            reg = <0x00000000 0xe66e8000 0x0 0x40>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+            interrupts = <53 0 4>;
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 25>,                 /* S0D6 is I2C input clock */
+                     <&cpg 204>;                /* I2C-IF6 module clock */
+            clock-names = "inputClk", "moduleClk";
+            i2c-scl-internal-delay-ns = <6>;    /* LVTTL buffer */
+            pinmux-0;
+            status = "disabled";
+            };
+
+        sdhi0: sd@ee100000
+            {
+            compatible = "renesas,sdhi-r8a7795";
+            reg = <0x00000000 0xee100000 0x0 0x2000>;
+            interrupts = <197 0 4>;
+            clocks = <&cpg 39>,         /* SD0 input clock */
+                     <&cpg 38>,         /* SD0H is SD0 parent */
+                     <&cpg 103>;        /* SD-IF0 is module clock */
+            clock-names = "inputClk", "parentClk", "moduleClk";
+            pinmux-0;
+            cd-pin = <0xfffe>;
+            wp-pin;
+            voltage-support;
+            driver-type;
+            status = "disabled";
+            };
+
+        mmc0: mmc@ee140000
+            {
+            compatible = "renesas,rcar-h3-mmc";
+            reg = <0x00000000 0xee140000 0x0 0x2000>;
+            interrupts = <199 0 4>;     /* SDHI.ch2 */
+            interrupt-parent = <&gic>;
+            clocks = <&cpg 43>,         /* SD2 is MMC0 input clock */
+                     <&cpg 42>,         /* SD2H is SD2 parent */
+                     <&cpg 41>,         /* SD1 is disabled for MMC0 */
+                     <&cpg 105>;        /* SD-IF2 is MMC0 module clock */
+            clock-names = "inputClk", "parentClk", "disableClk", "moduleClk";
+            pinmux-0;
+            cd-pin;
+            wp-pin;
+            voltage-support;
+            driver-type;
+            status = "disabled";
+            };
+
+        mmc1: mmc@ee160000
+            {
+            compatible = "renesas,rcar-h3-mmc";
+            reg = <0x00000000 0xee160000 0x0 0x2000>;
+            interrupts = <200 0 4>;
+            clocks = <&cpg 45>,         /* SD3 input clock  */
+                     <&cpg 44>,         /* SD3H is SD3 parent */
+                     <&cpg 106>;        /* SD-IF3 is module clock */
+            clock-names = "inputClk", "parentClk", "moduleClk";
+            pinmux-0;
+            cd-pin;
+            wp-pin;
+            voltage-support;
+            driver-type;
+            status = "disabled";
+            };
+
+        usb2_phy0: usb-phy@ee080200
+            {
+            compatible = "renesas,rcar-gen3-usb2-phy";
+            reg = <0x00000000 0xee080200 0x0 0x700>;
+            interrupts = <140 0 4>;
+            #phy-cells = <0>;
+            clocks = <&cpg 174>, <&cpg 173>;
+            status = "disabled";
+            };
+
+        usb2_phy1: usb-phy@ee0a0200
+            {
+            compatible = "renesas,rcar-gen3-usb2-phy";
+            reg = <0x00000000 0xee0a0200 0x0 0x700>;
+            #phy-cells = <0>;
+            clocks = <&cpg 175>;
+            status = "disabled";
+            };
+
+        ehci0: usb@ee080100
+            {
+            compatible = "generic-ehci";
+            reg = <0x00000000 0xee080100 0x0 0x100>;
+            interrupts = <140 0 4>;
+            clocks = <&cpg 174>, <&cpg 173>;
+            phys = <&usb2_phy0>;
+            phy-names = "usb";
+            status = "disabled";
+            };
+
+        ehci1: usb@ee0a0100
+            {
+            compatible = "generic-ehci";
+            reg = <0x00000000 0xee0a0100 0x0 0x100>;
+            interrupts = <144 0 4>;
+            clocks = <&cpg 175>;
+            phys = <&usb2_phy1>;
+            status = "disabled";
+            };
+
+        ohci0: usb@ee080000
+            {
+            compatible = "generic-ohci";
+            reg = <0x00000000 0xee080000 0x0 0x100>;
+            interrupts = <140 0 4>;
+            clocks = <&cpg 174>, <&cpg 173>;
+            phys = <&usb2_phy0>;
+            status = "disabled";
+            };
+
+        ohci1: usb@ee0a0000
+            {
+            compatible = "generic-ohci";
+            reg = <0x00000000 0xee0a0000 0x0 0x100>;
+            interrupts = <144 0 4>;
+            clocks = <&cpg 175>;
+            phys = <&usb2_phy1>;
+            status = "disabled";
+            };
+
+        xhci0: usb@ee000000
+            {
+            compatible = "renesas,rcar-gen3-xhci";
+            reg = <0x00000000 0xee000000 0x0 0xc00>;
+            interrupts = <134 0 4>;
+            clocks = <&cpg 99>;
+            status = "disabled";
+            };
+
+        usb3_peri0: usb@ee020000
+            {
+            reg = <0x00000000 0xee020000 0x0 0x400>;
+            interrupts = <136 0 4>;
+            status = "disabled";
+            };
+
+        usb3_phy0: usb-phy@e65ee000
+            {
+            reg = <0x00000000 0xe65ee000 0x0 0x90>;
+            status = "disabled";
+            };
+
+        usb_dmac0: dma-controller@e65a0000
+            {
+            reg = <0x00000000 0xe65a0000 0x0 0x100>;
+            interrupts = <141 0 4>;
+            status = "disabled";
+            };
+
+        usb_dmac1: dma-controller@e65b0000
+            {
+            reg = <0x00000000 0xe65b0000 0x0 0x100>;
+            interrupts = <142 0 4>;
+            status = "disabled";
+            };
+
+        hsusb0: usb@e6590000
+            {
+            reg = <0x00000000 0xe6590000 0x0 0x100>;
+            interrupts = <139 0 4>;
+            phys = <&usb2_phy0>;
+            status = "disabled";
+            };
+        };
+    };

@@ -1,0 +1,847 @@
+target.txt - Renesas RZ/G2M specific documentation
+
+Copyright (c) 2019 Wind River Systems, Inc.
+
+Redistribution and use in source and binary forms, with or without modification,
+are permitted provided that the following conditions are met:
+
+1) Redistributions of source code must retain the above copyright notice,
+this list of conditions and the following disclaimer.
+
+2) Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/or
+other materials provided with the distribution.
+
+3) Neither the name of Wind River Systems nor the names of its contributors may
+be used to endorse or promote products derived from this software without specific
+prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+modification history
+--------------------
+18nov19,hli  created (VXWPG-394)
+
+renesas_rz_g2m - Renesas RZ/G2M Family
+
+EXTERNAL DEPENDENCIES
+None
+
+INTRODUCTION
+
+This document describes the features of the renesas_rz_g2m open source BSP,
+which is designed to run on the HIHOPE RZ/G2(M) V2 board. This is an
+ARM Cortex-A57 and Cortex-A53 processor-based platform.
+
+Verified Boards
+
+The current release of this BSP has been verified on the following boards:
+
+HIHOPE RZ/G2(M) V2
+
+Jumpers & Switches
+
+The default switch settings for booting in SPI boot mode are as follows:
+
+Switch Number   | Switch ON        | Switch OFF
+------------------------------------------------------
+SW1001          | 2,3,4,5,6,7,8    | 1
+SW1002          | 1,2,3,4,5,7,8    | 6
+SW1003          | 2,3,4,5,6,7,8    | 1
+
+Running VxWorks
+
+This section describes how to run VxWorks on the supported boards.
+
+1. Creating VxWorks image
+
+    1.1 Create and configure a VSB (VxWorks Source Build)
+
+    A VSB must be created before a VIP could be used, and it could be created
+    based on the BSP: renesas_rz_g2m_0_1_0_0.
+
+        1.1.1 Create a VSB
+
+        In the step of "Project Setup" in Workbench, select
+        renesas_rz_g2m_0_1_0_0 UNSUPPORTED.
+
+        Or just use the following command in the VxWorks 7 Development Shell:
+
+        vxprj vsb create -bsp renesas_rz_g2m_0_1_0_0 -S myVsb
+
+        The BSP version number "0_1_0_0" can change as the BSP gets updated.
+        To view a list of supported versions of the BSPs, you can run the
+        following command in the VxWorks 7 Development Shell:
+
+        vxprj vsb listBsps
+
+        1.1.2 Build the VSB
+
+        Build the VSB in the Workbench or use the command below in the VxWorks 7
+        Development Shell:
+
+        vxprj build
+
+    1.2 Create a VIP based on the new VSB
+
+        Please note: Both Workbench and the VxWorks 7 Development Shell can be 
+        used to create and configure the VIP. All the sections below will only 
+        use the VxWorks 7 Development Shell for the example commands.
+
+        1.2.1 Create a VIP based on the new VSB
+
+        In the same directory of the new VSB, use below command to create a VIP:
+
+        vxprj vip create -vsb myVsb renesas_rz_g2m_0_1_0_0 llvm myVip
+
+        1.2.2 Configure and build the VIP
+
+            1.2.2.1 Configure the device tree blob (DTB) loading method
+
+            The VxWorks 7 ARM BSP uses device tree nodes to describe device
+            specific information, and there are two methods to load the device
+            tree blob:
+                - Embedded:     the device tree blob is embedded in the VxWorks
+                                image.
+                - Independent:  an independent file is created for the device
+                                tree blob. And the independent method is used
+                                by default.
+
+            To use the embedded method, use the command below in the VIP
+            directory:
+
+            vxprj component add INCLUDE_STANDALONE_DTB
+
+            1.2.2.2 Configure the booting method and image type
+
+            The U-Boot can boot up two kinds of VxWorks images: uVxWorks and raw
+            bin file vxWorks.bin. The uVxWorks is used for U-Boot "bootm"
+            command, and needs an independent or embedded DTB file. The
+            vxWorks.bin is used for U-Boot "go" command and needs embedded DTB.
+
+            Use one of the below commands to create different VxWorks image:
+
+            vxprj build uVxWorks
+            vxprj build vxWorks.bin
+            vxprj build vxWorks
+
+            After the build succeeds, the related DTB files
+            (with .dtb suffix) are also created in the "default" subdirectory
+            of the VIP. For this BSP, "r8a774a1-hihope-rzg2m.dtb" will be
+            created.
+
+2. Boot Firmware
+
+    Before using VxWorks for the first time, the HIHOPE RZ/G2(M) V2 must be
+    programmed with ARM Trusted Firmware and U-Boot. This process is described
+    in the Yocto recipe Start-Up Guide.
+
+    This BSP had been verified using Renesas RZ/G2 Yocto recipe package Rev1.02
+    with an Ubuntu 16.04 LTS (64bit) which is recommended by the Yocto recipe
+    Start-Up Guide.
+
+    2.1 Set the shell variable
+
+        $ export WORK=/home/user/user_work
+        $ export PKGS_DIR=$WORK/proprietary
+
+    2.2 Download required files
+
+        $ cd ${WORK}
+        $ git clone git://git.yoctoproject.org/poky
+        $ git clone git://git.linaro.org/openembedded/meta-linaro.git
+        $ git clone git://git.openembedded.org/meta-openembedded
+        $ git clone https://github.com/renesas-rz/meta-rzg2.git
+        $ git clone http://git.yoctoproject.org/cgit.cgi/meta-gplv2
+        $ git clone https://github.com/meta-qt5/meta-qt5.git
+
+    2.3 Checkout available version
+
+        $ cd ${WORK}/poky
+        $ git checkout -b tmp 7e7ee662f5dea4d090293045f7498093322802cc
+        $ cd ${WORK}/meta-linaro
+        $ git checkout -b tmp 75dfb67bbb14a70cd47afda9726e2e1c76731885
+        $ cd ${WORK}/meta-openembedded
+        $ git checkout -b tmp 352531015014d1957d6444d114f4451e241c4d23
+        $ cd ${WORK}/meta-gplv2
+        $ git checkout -b tmp f875c60ecd6f30793b80a431a2423c4b98e51548
+        $ cd ${WORK}/meta-qt5
+        $ git checkout -b tmp c1b0c9f546289b1592d7a895640de103723a0305
+        $ cd ${WORK}/meta-rzg2
+        $ git checkout -b tmp BSP-1.0.2
+
+        Note: tmp is a temporary name of a local branch.
+
+    2.4 Execute the copy script for proprietary software
+
+        $ cd $WORK/meta-rzg2
+        $ sh docs/sample/copyscript/copy_proprietary_softwares.sh $PKGS_DIR
+
+    2.5 Setup the build environment
+
+        $ cd ${WORK}
+        $ source poky/oe-init-build-env
+
+    2.6 Prepare the default configuration files for the target board
+
+        $ cd $WORK/build
+        $ cp ../meta-rzg2/docs/sample/conf/hihope-rzg2m/linaro-gcc/*.conf ./conf/
+
+    2.7 Building with bitbake
+
+        $ bitbake core-image-bsp
+
+        Note: Build might need several hours under the influence of Linux Host
+        PC performance and network environment.
+
+        After compilation is complete. The file system
+        (core-image-bsp-hihope-rzg2m.tar.bz2) is created in
+        ${WORK}/build/tmp/deploy/images/hihope-rzg2m/ directory.
+
+    2.8 Write the Firmware to Flash
+
+        Image Filename          | Program Address | Flash Address | Description
+        ------------------------|-----------------+---------------+-----------------------
+        bootparam_sa0.srec      | 0xE6320000      | 0x000000      | Loader(Boot parameter)
+        bl2-<board>.srec        | 0xE6304000      | 0x040000      | Loader
+        cert_header_sa6.srec    | 0xE6320000      | 0x180000      | Loader(Certification)
+        bl31-<board>.srec       | 0x44000000      | 0x1C0000      | ARM Trusted Firmware
+        u-boot-elf-<board>.srec | 0x50000000      | 0x300000      | U-Boot
+
+        Note: <board>: hihope-rzg2m
+
+        2.8.1 Preparing Flash Writer
+
+            2.8.1.1 Download Linaro toolchain
+
+                $ cd ~/
+                $ wget https://releases.linaro.org/components/toolchain/binaries/
+                  7.3-2018.05/aarch64-elf/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-elf.tar.xz
+                $ tar xvf gcc-linaro-7.3.1-2018.05-x86_64_aarch64-elf.tar.xz
+
+            2.8.1.2 Building Flash Writer
+
+                $ cd ~/
+                $ git clone https://github.com/renesas-rz/rzg2_flash_writer.git
+                $ cd rzg2_flash_writer
+                $ git checkout -b v1.00 v1.00
+                $ make clean
+                $ export CROSS_COMPILE=~/gcc-linaro-7.3.1-2018.05-x86_64_aarch64-elf/bin/aarch64-elf
+                $ make BOARD=<board>
+
+                Note: <board>: HIHOPE, The Flash writer is
+                AArch64_Flash_writer_SCIF_DUMMY_CERT_E6300400_hihope.mot.
+
+        2.8.2 set the board to SCIF Download mode
+
+            The default switch settings for SCIF download mode are as follows:
+
+            Switch Number   | Switch ON        | Switch OFF
+            ------------------------------------------------------
+            SW1001          | 2,3,4,6,7,8      | 1
+            SW1002          | 1,2,3,4          | 5,6,7,8
+            SW1003          | 2,3,4,5,6,7,8    | 1
+
+        2.8.3 Connect to the board
+
+            Connect between the board and a control PC by USB serial cable. The
+            serial communication protocol terminal software is Tera Term and the
+            settings are as below:
+
+                Speed: 115200 bps
+                Data: 8bit
+                Parity: None
+                Stop bit: 1bit
+                Flow control: None
+
+        2.8.4 Booting Flash Writer
+
+            Power on board, The MiniMonitor prompt should be displayed: 
+
+            SCIF Download mode (w/o verification)
+             (C) Renesas Electronics Corp.
+
+            -- Load Program to SystemRAM ---------------
+            please send !
+
+            Flash writer for RZ/G2M V1.00 Sep.24,2019
+
+        2.8.5 Write the firmware to flash using the XLS2 command
+
+            Use the 'XLS2' command to write binary files. This command receives
+            binary data from the serial port and write the data to specified
+            address of the Flash ROM with information where the data should be
+            loaded on the address of the main memory.
+
+            This is an example of writing "bootparam_sa0.srec" to the Flash ROM.
+
+            >XLS2
+            ===== Qspi writing of RZ/G2 Board Command =============
+            Load Program to Spiflash
+            Writes to any of SPI address.
+             Winbond : W25M512JW
+            Program Top Address & Qspi Save Address
+            ===== Please Input Program Top Address ============
+              Please Input : H'E6320000
+
+            ===== Please Input Qspi Save Address ===
+              Please Input : H'000000
+            Work RAM(H'50000000-H'53FFFFFF) Clear....
+            please send ! ('.' & CR stop load)
+
+            Send the data of "bootparam_sa0.srec" from terminal software after
+            the message "please send !" is shown. After successfully download
+            the binary, messages like below are shown on the terminal.
+
+            SPI Data Clear(H'FF) Check : H'00000000-0000FFFF,Clear OK?(y/n)
+            In case a message to prompt to clear data like above, please enter 
+            "y".
+
+            SPI Data Clear(H'FF) Check :H'00000000-H'00007FFF Erasing.
+            ........Erase Completed
+            H'00000000-0000FFFF Erasing..Erase Completed
+            SAVE SPI-FLASH.......
+            ======= Qspi  Save Information  =================
+             SpiFlashMemory Stat Address : H'00000000
+             SpiFlashMemory End Address  : H'00000E67
+            ===========================================================
+
+            After write all necessary image files, turn down the power of the
+            board and set the board to SPI boot mode.
+
+ 3. Boot VxWorks Image Using Boot Firmware
+
+    3.1 Running U-Boot image
+
+        Set the board to the SPI boot mode and turn on the power of the board.
+        The terminal will display the following information as below:
+
+        U-Boot 2018.09 (Nov 22 2019 - 05:36:23 +0000)
+
+        CPU: Renesas Electronics R8A774A1 rev 1.1/rev 1.2
+        Model: Hoperun Technology HiHope RZ/G2M platform (hihope-rzg2m)
+        DRAM:  3.9 GiB
+        Bank #0: 0x048000000 - 0x0bfffffff, 1.9 GiB
+        Bank #1: 0x600000000 - 0x67fffffff, 2 GiB
+
+        MMC:   sd@ee100000: 0, sd@ee160000: 1
+        Loading Environment from MMC... OK
+        In:    serial@e6e88000
+        Out:   serial@e6e88000
+        Err:   serial@e6e88000
+        Net:   eth0: ethernet@e6800000
+        Hit any key to stop autoboot:
+        =>
+
+    3.2 Downloading the VxWorks image
+
+        3.2.1 Start a TFTP server
+
+        Open a TFTP server on your host. Make sure the root directory is your
+        project directory of the VIP which contains the VxWorks image.
+
+        3.2.2 Configure the U-Boot environment
+
+        When the board boots up, U-Boot will prompt you to enter the U-Boot
+        shell. Press any key to enter into the U-Boot shell before the countdown
+        is complete. Type the following commands to setup the U-Boot environment.
+
+        setenv ipaddr 192.168.0.2
+        setenv netmask 255.255.255.0
+        setenv serverip 192.168.0.3
+        setenv gatewayip 192.168.0.1
+        saveenv
+
+        Note:
+        1)  This is just an example and you must change the network parameters
+            according to your actual situation.
+
+    3.3 Download and run the vxWorks.bin image for U-Boot
+
+        3.3.1 Download vxWorks.bin image for U-Boot
+
+        The vxWorks.bin image is used for U-Boot "go" command, so the
+        downloading address must be the same as "KERNEL_LOAD_ADRS".
+        For HIHOPE RZ/G2(M) V2, it's 0x48100000. Also, it is used along
+        with the embedded DTB, so component INCLUDE_STANDALONE_DTB is needed
+        for the vxWorks.bin building.
+
+        Use below command to download the vxWorks.bin image for U-Boot:
+
+        tftp $KERNEL_LOAD_ADRS vxWorks.bin
+
+        3.3.2 Running the vxWorks.bin image on U-Boot
+
+        Use "go <image running address>" to run the vxWorks.bin image as below:
+
+        go $KERNEL_LOAD_ADRS
+
+    3.4 Download and run the uVxWorks image for U-Boot
+
+        3.4.1 Download uVxWorks image for U-Boot
+
+        The uVxWorks image can be used along with an independent DTB file. The
+        downloading address must not destroy the spaces used by VxWorks.
+        Below is an example for HIHOPE RZ/G2(M) V2:
+
+        In the U-Boot shell, type the following command to download uVxWorks:
+
+        tftp 0x48100000 uVxWorks
+
+        Type the following command to download DTB:
+
+        tftp 0x49100000 r8a774a1-hihope-rzg2m.dtb
+
+        3.4.2. Running the uVxWorks image on U-Boot
+
+        If the uVxWorks image uses the independent DTB file, use the
+        'bootm <image address> - <DTB address>' command to load and run the
+        uVxWorks image as follows:
+
+        bootm 0x48100000 - 0x49100000
+
+        If the uVxWorks image uses the embedded DTB file, use the
+        'bootm <image address>' command to load and run the uVxWorks image as
+        follows:
+
+        bootm 0x48100000
+
+4. Summary
+
+    Below is a summary about configuring and running VxWorks 7:
+
+                    | uVxWorks      | vxWorks.bin
+    --------------------------------------------------------
+    Boot Loader     | U-Boot        | U-Boot
+    DTB Mode        | independent   | embedded
+    Component Needed|               | INCLUDE_STANDALONE_DTB
+    Boot Method     | bootm         | go
+
+DEVICE TREE
+
+This BSP uses device tree nodes to describe the device specific information
+on the board. The supported drivers will get configuration data from
+the device tree source files (with suffix .dts) under the BSP directory.
+For the structure of the device tree source file, please refer to the
+ePAPR specification here:
+http://www.power.org/technology-introduction/standards-specifications/
+
+The supported boards and the corresponding device tree source (DTS) files for
+this BSP are mapped as follows:
+
+Board                     | Device Tree Source          | Boot Loader
+--------------------------------------------------------------------------------
+HIHOPE RZ/G2(M) V2        | r8a774a1-hihope-rzg2m.dtb   | U-Boot
+
+Based on the following device tree blob (DTB) loading methods, these DTS files
+are used in different ways:
+
+- Embedded:     A VIP parameter, DTS_FILE, designates which DTS file is used for
+                the current VIP. The default value is set to support the correct
+                board according to the table above.
+
+- Independent:  The corresponding DTB files (with suffix .dtb) are created in
+                the 'default' subdirectory of the VIP as part of the build
+                process. These DTB files are used by the U-Boot 'bootm' command.
+
+FEATURES
+
+This section describes all features of the board, supported or not.
+
+It documents all configurations of the board and the interaction between
+features and configuration items.
+
+List of hardware features
+
+HIHOPE RZ/G2(M) V2:
+
+Hardware Interface | Controller       | Driver/Component           | Status
+--------------------------------------------------------------------------------
+Mini UART          | on-chip          | DRV_SIO_FDT_SCIF           | SUPPORTED
+ARM Generic Timer  | on-chip          | DRV_ARM_GEN_TIMER          | SUPPORTED
+TMU                | on-chip          | DRV_TIMER_FDT_TMU          | SUPPORTED
+ARM GIC            | on-chip          | DRV_INTCTLR_FDT_ARM_GIC    | SUPPORTED
+CPG MSSR           | on-chip          | DRV_CLK_FDT_RZG2_CPG_MSSR  | SUPPORTED
+PinMux             | on-chip          | DRV_PINMUX_FDT_RZG2_PFC    | SUPPORTED
+PCIe               | on-chip          | DRV_FDT_RCAR_H3_PCIE       | SUPPORTED
+GPIO               | on-chip          | DRV_RCAR_H3_GPIO           | SUPPORTED
+I2C                | on-chip          | DRV_RCAR_H3_I2C            | SUPPORTED
+ETHERNET           | on-chip          | DRV_END_FDT_ETHERAVB       | SUPPORTED
+Watchdog Module    | on-chip          | DRV_FDT_RS_WATCHDOG        | SUPPORTED
+SD/eMMC            | on-chip          | DRV_RCAR_H3_MMC            | SUPPORTED
+USB (USB3.0)       | on-chip          | USB Host Stack 3.0 (XHCI)  | SUPPORTED
+USB (USB2.0)       | on-chip          | USB Host Stack 2.0 (EHCI)  | SUPPORTED
+HDMI               | on-chip          |                            | UNSUPPORTED
+SPI                | on-chip          |                            | UNSUPPORTED
+QSPI               | on-chip          |                            | UNSUPPORTED
+QSPI FLASH         | W25M512JWX_TFBGA |                            | UNSUPPORTED
+SATA               | on-chip          |                            | UNSUPPORTED
+CAN                | on-chip          |                            | UNSUPPORTED
+LVDS               | on-chip          |                            | UNSUPPORTED
+
+Feature Interactions
+
+Refer to the board vendor's documentation.
+
+HARDWARE DETAILS
+
+This section documents the details of the device drivers and board hardware
+elements.
+
+Verified Hardware
+
+This BSP had been verified on below boards:
+
+Board                          | Type                   | Revision
+------------------------------------------------------------------
+HIHOPE RZ/G2(M) V2             | N/A                    | V2
+
+Note: 
+      1) All the other revisions of the same board might work with this
+         BSP, but it is not officially supported.
+
+Serial Connections
+
+    The HIHOPE RZ/G2(M) V2 board uses the on-chip SCIF2 as debug serial
+    interfaces. Both are connected to the USB micro-AB connector via the USB to 
+    UART bridge CP2102.
+
+    NOTE: The host PC connected to the HIHOPE RZ/G2(M) V2 board requires the 
+    CP2102 USB driver software. This driver software can be obtained from the 
+    following URL.
+
+    http://www.silabs.com/products/mcu/Pages/USBtoUARTBridgeVCPDrivers.aspx
+
+    After installing the drivers, set up a serial terminal using a PC
+    communication program such as hyper terminal set to 115200-8-N-1. Then,
+    select the first COM port assigned to the Virtual COM port.
+
+Serial Configuration
+
+    No special serial configuration is required. The serial configuration is
+    supported by the DRV_SIO_FDT_SCIF component and is enabled by default.
+
+    The default serial configuration is:
+        Baud Rate   : 115200
+        Data        : 8 bit
+        Stop        : 1 bit
+        Parity      : None
+        Flow Control: None
+
+Timer
+
+    There are various hardware timers either in processor core or in SOC. The
+    description about these timers is as follows:
+
+    Arm Generic Timer
+
+    This support refers to the generic timer in the ARM core. This feature is
+    supported by the DRV_ARM_GEN_TIMER component. In this BSP, it is used as the
+    system clock by default.
+
+    To include these supports, add the following component to your VIP:
+
+    vxprj vip component add DRV_ARM_GEN_TIMER
+
+    Timer Unit (TMU)
+
+    These are the public timers in the SOC.
+    They are supported by the DRV_TIMER_FDT_TMU component and can be
+    used as both a system clock and an auxiliary clock in this BSP.
+
+    To include these supports, add the following component to your VIP:
+
+    vxprj vip component add DRV_TIMER_FDT_TMU
+
+CPG MSSR
+
+    CPG and MSSR is the abbreviation of Clock Pulse Generator and Module
+    Standby / Software Reset modules. The CPG generates clocks for CPU cores
+    and peripherals. The MSSR clocks control peripheral module operation.
+    To add this driver to the vxWorks image, add the DRV_CLK_FDT_RZG2_CPG_MSSR
+    component to the kernel configuration.
+
+    This driver must be present in order to support other drivers that require a
+    CPG or MSSR clock source. When binding client devices (clock users) in the
+    device tree the property is required, listing the required clock source and
+    parameter pairs.
+
+    Take the I2C node as an example:
+
+    i2c0: i2c@e6500000
+        {
+        ...
+        clocks = <&cpg 35>,                 /* S3D2 is I2C input clock */
+                 <&cpg 193>;                /* I2C-IF0 module clock */
+        ...
+        };
+
+    The client user (here, the I2C driver) must enable the clock and get the clock
+    frequency in the attach method as below:
+
+    if (vxbClkEnableAll (pDev) != OK)
+        {
+        goto errHandle;
+        }
+
+    pClk = vxbClkGet (pDev, RCARH3_I2C_INPUT_CLOCK);
+    if (pClk == NULL)
+        {
+        goto errHandle;
+        }
+
+    inputClkFreq = vxbClkRateGet (pClk);
+
+    To include the clock support, add the following component to your VIP:
+
+    vxprj vip component add DRV_CLK_FDT_RZG2_CPG_MSSR
+
+PinMux
+
+    The PinMux management functionality is supported in this release of the BSP.
+    The driver provides the ability to set the function, driving strength,
+    pulling up/down, and other miscellaneous functions.
+
+    The PinMux module provides several groups of PinMux setting values in the 
+    PinMux device tree nodes. Each group includes the whole PinMux setting of
+    a specified device. If a driver requires PinMux to be enabled, it should
+    find a supported group handle and write it to the device tree source node.
+
+    Take the UART node as an example:
+
+    scif2Pins: scif2
+        {
+        /* TX2_A, RX2_A */
+        pins = "sipF38", "sipF39";
+        function = "scif2";
+        bias-disable;
+        drive-control = <8>;
+        };
+
+    The client user (here, the UART driver) must enable the PinMux in the attach
+    method as below:
+
+    vxbPinMuxEnable (pDev);
+
+    To use the PinMux, add the following component to your VIP:
+
+    vxprj vip component add DRV_PINMUX_FDT_RZG2_PFC
+
+PCIe
+
+    PCIe is supported in this release of the BSP. It is supported by including 
+    the component DRV_FDT_RCAR_H3_PCIE.
+
+    To include the support, add the following component to your VIP:
+
+    vxprj vip component add DRV_FDT_RCAR_H3_PCIE
+
+PCIe Limitations
+
+    The PCIe controller also relies on the PCIe adapter driver to work. When 
+    developing the PCIe driver, only the Intel PRO/1000 VxBus Enhanced Network 
+    driver was available and verified on VxWorks 7. The detailed hardware 
+    information is as follows:
+
+    Adapter     INTEL(R) GIGABIT CT DESKTOP ADAPTER 
+    Chip        WG82574L
+
+    To use the GEI825XX driver, add the following component to the VIP:
+
+    vxprj vip component add INCLUDE_GEI825XX_VXB_END
+
+GPIO
+
+    The GPIO module which supplies general purpose input/output is supported in
+    this release of BSP. It is supported by component DRV_RCAR_H3_GPIO.
+
+    To include the support, add the following component to your VIP:
+
+    vxprj vip component add DRV_RCAR_H3_GPIO
+
+    This feature is validated on the HIHOPE RZ/G2(M) V2 Board by using the
+    LED2203/2202/2201 which is connected to GPIO GP6_13/12/11 in output mode,
+    and the user button1 SW2203/2202/2201 which is also connected to GPIO
+    GP6_13/12/11 working in interrupt mode.
+
+I2C
+
+    I2C is supported in this release of the BSP. It is supported by component
+    DRV_RCAR_H3_I2C.
+
+    To include the support, add the following component to your VIP:
+
+    vxprj vip component add DRV_RCAR_H3_I2C
+
+    The client user should then use VxBus I2C APIs to access the I2C function.
+
+    This feature is validated on the HIHOPE RZ/G2(M) V2 Board by using the
+    chip PCA9654EDTR2G which is connnented to the I2C4. The CPU can read
+    registers of the PCA9654EDTR2G through I2C4.
+
+Network Configuration
+
+    The RZ/G2M SOC has only one type of Ethernet controller, called EthernetAVB.
+    This controller can be configured for 100 Mbps, or 1 Gbps in RGMII mode.
+
+    To enable the Ethernet controller (EthernetAVB), add the following component
+    to your VIP:
+
+    vxprj vip component add INCLUDE_END
+
+    The Ethernet address (also known as the MAC address or station address) of
+    the on-chip network controller can be configured using one of the following 
+    methods:
+
+    1. Configure the address by adding an endMacGet() callout function to the
+       'BOARD_FUNC_TBL' in the boardLib structure. In this function, you can set
+       the MAC address for a network controller. The prototype for endMacGet()
+       is as follows:
+
+       STATUS endMacGet
+           (
+           char *       ifName,
+           unsigned int ifUnit,
+           UINT8 *      ifMacAddr,
+           unsigned int ifMacAddrLen
+           )
+
+       DESCRIPTION:
+           This function gets the MAC address for a network controller which is
+           specified by the network interface name.
+
+       INPUT:
+           ifName      : A pointer pointing to a string which is the network
+                         interface name of the network controller
+           ifUnit      : The network interface index
+           ifMacAddr   : A pointer pointing to the memory that is used to store
+                         the MAC address
+           ifMacAddrLen: The length of the MAC address
+
+       RETURNS:
+           OK, or ERROR if it fails to get a MAC address
+
+       The following is an example with pseudo code. It can be placed in the
+       'sysLib.c' file in this BSP folder.
+
+       BOARD_DESC boardDesc =
+           {
+           /* .uVer     = */ BOARD_DESC_VER_DEF,
+           ...
+           /* .pFuncTbl = */ &boardFuncTbl,
+           ...
+           };
+
+       BOARD_FUNC_TBL boardFuncTbl =
+           {
+           ...
+           /* .endMacGet  = */ boardEndMacGet,
+           ...
+           }
+
+       STATUS boardEndMacGet
+           (
+           char *        ifName,
+           unsigned int  ifUnit,
+           UINT8 *       ifMacAddr,
+           unsigned int  ifMacAddrLen
+           )
+           {
+           UINT8 macAddr[6] = {0x00, 0x0A, 0x35, 0x11, 0x22, 0x33};
+
+           if ((ifName == NULL ) || (ifMacAddr == NULL))
+               return ERROR;
+
+           bcopy(macAddr, ifMacAddr, ifMacAddrLen);
+
+           return OK;
+           }
+
+    2. Configure the address in the device tree node. To change the address,
+       open the device tree source (DTS) file, locate the required property, 
+       and modify it. For example:
+
+       local-mac-address = [ 2E 09 0A 00 00 00 ];
+
+Watchdog
+
+    Watchdog is supported in this release of the BSP. To use the watchdog
+    module, add the following component to the VIP:
+
+    vxprj vip component add DRV_FDT_RS_WATCHDOG
+
+    This feature is validated on the HIHOPE RZ/G2(M) V2 Board by using
+    watchdog 0.
+
+SD/eMMC
+
+    SD and eMMC are supported in this release of the BSP.
+
+    To use SDHC and an SD card, add the following components to your VIP:
+
+    vxprj vip component add DRV_RCAR_H3_MMC
+    vxprj vip component add DRV_SDSTORAGE_CARD
+
+    To use eMMC, add the following components to your VIP:
+
+    vxprj vip component add DRV_RCAR_H3_MMC
+    vxprj vip component add DRV_MMCSTORAGE_CARD
+
+USB
+
+    USB Host Stack 3.0 (xHCI) and  USB Host Stack 2.0 (EHCI) are supported in
+    this release of the BSP.
+
+    To enable the USB controller, add the following layer to the VSB:
+
+    vxprj vsb add USB
+
+    There is one USB 3.0 port on the HIHOPE RZ/G2(M) V2 Board. It's USB3.0
+    Type-A port. To use it, add the following components to the VIP:
+
+    vxprj vip component add INCLUDE_USB_XHCI_HCD
+    vxprj vip component add INCLUDE_USB_XHCI_HCD_INIT
+
+    There are two USB 2.0 ports on the HIHOPE RZ/G2(M) V2 Board. One is USB
+    Type-microAB port, another is USB Type-A port. Only the USB Type-A port is
+    validated. To use it, add the following components to the VIP:
+
+    vxprj vip component add INCLUDE_EHCI
+    vxprj vip component add INCLUDE_EHCI_INIT
+    vxprj vip component add INCLUDE_USB_PHY_RCAR_GEN3
+
+    To support DesignWare USB3 driver, the parameter XHCI_RCAR_ENABLE
+    should be set to TRUE.
+
+    vxprj vip parameter set myVip XHCI_RCAR_ENABLE TRUE
+
+    To use different USB devices, USB class drivers need to be enabled as
+    well. See the VxWorks USB documentation for more information. As an
+    example, the following command adds the USB mass storage class driver to
+    support USB mass storage devices:
+
+    vxprj vip component add INCLUDE_USB_GEN2_STORAGE_INIT
+
+Limitations and Known Issues
+
+Feature     Note
+-----------+--------------------------------------------------------------------
+N/A        |N/A
+
+SEE ALSO
+
+Workbench User's Guide
+VxWorks 7 Platform Programmer's Guide
+VxWorks 7 Application Programmer's Guide
+VxWorks 7 Configuration and Build Guide
+VxWorks 7 ARM Architecture Guide
+VxWorks 7 BSP and Driver Guide
